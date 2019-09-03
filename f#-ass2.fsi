@@ -1,5 +1,5 @@
+ 
 open System 
-open System.Xml.Xsl
 // F# chapter exercises
 
 //chapter 1
@@ -32,6 +32,12 @@ let rec fib = function
     | (m,0) -> m
     | (m,n) -> m + sum ((m+1),(n-1))
 
+// 1.6
+let rec sum (m,n) =
+    match n with
+    | 0 -> 0
+    | x -> m+sum (m,n-1)
+let resSum = sum (2,4)
 
 // chapter 2
 
@@ -497,5 +503,386 @@ let res5e5 = extColouring map [] "a" // not working for this case
 let res5e6 = extColouring map [["c"]] "a";;
 let res5e7 = extColouring map [["b"]] "a";;
 
+// 5.6 -> 5.11 missing
 
+// 5.6
+let dom r (A:Set<int>) (B:Set<int>) = 
+    Set.fold (fun s x -> if r x && Set.exists r B then Set.add x s else s) Set.empty A
+let res5f = dom (fun x -> (x > 0) && (x % 2 = 0)) (Set.ofList [-2;3;4;5;6]) (Set.ofList [-8;1;11]);;
+
+// 6.1 - not sure about the meaning
+
+// 6.2
+
+type Fexpr = 
+                | Const of float
+                | X
+                | Add of Fexpr * Fexpr
+                | Sub of Fexpr * Fexpr
+                | Mul of Fexpr * Fexpr
+                | Div of Fexpr * Fexpr
+                | Sin of Fexpr
+                | Cos of Fexpr
+                | Log of Fexpr
+                | Exp of Fexpr
+
+let rec toPostfixString e = 
+    match e with
+    | Const x       -> string x
+    | X             -> " x "
+    | Add(fe1,fe2)  -> toPostfixString fe1 + " "+ toPostfixString fe2 + " + "
+    | Sub(fe1,fe2)  -> toPostfixString fe1 + " "+ toPostfixString fe2 + " - "
+    | Mul(fe1,fe2)  -> toPostfixString fe1 + " "+ toPostfixString fe2 + " * "
+    | Div(fe1,fe2)  -> toPostfixString fe1 + " "+ toPostfixString fe2 + " / "
+    | Sin fe        -> toPostfixString fe  + " "+ " Sin "
+    | Cos fe        -> toPostfixString fe  + " Cos "
+    | Log fe        -> toPostfixString fe  + " Log "
+    | Exp fe        -> toPostfixString fe  + " Exp "
+
+let f = Add (Add (Const 2.1, Cos (Const 3.1)),Add (Const 2.1, Cos (Const 3.1)))
+
+toPostfixString f;;            
+
+// 6.3 - missing
+
+//6.4
+type  BinTree<'a,'b> = 
+    | Leaf of 'a 
+    | Node of BinTree<'a,'b> * 'b * BinTree<'a,'b>;;
+
+let leafVals t =
+    let rec inner t' acc=
+        match t' with
+        | Leaf x-> x::acc
+        | Node (l,n,r) ->  (inner l acc) @ (inner r acc)
+    Set.ofList (inner t [] )
+
+let t1 = Node(Node(Leaf 1,"cd",Node(Leaf 8,"hd",Leaf 5)),"ab", Leaf 3)
+let res6d = leafVals t1;;
+
+let nodeVals t =  
+    let rec inner t' acc=
+            match t' with
+            | Leaf x-> acc
+            | Node (l,n,Leaf _) -> inner l (n::acc )
+            | Node (Leaf _,n,r) -> inner r (n::acc)
+            | Node (l,n,r) -> (inner l acc) @ (inner r acc) @ [n]
+    Set.ofList (inner t [] )
+
+let res6e = nodeVals t1
+
+let vals t = (leafVals t, nodeVals t)
+let res6f = vals t1 
+
+// 6.5
+
+type AncTree =  | Unspec
+                | Info of AncTree * string * AncTree
+
+let nodeAnctree = Info(Info(Info(Unspec,"Verner",Unspec),"Erik",Unspec),"Thomas",Info(Info(Unspec,"Mogens", Unspec),"Kirsten", Info(Unspec,"Agnete",Unspec)))
+
+                                                                                        
+let maleAnc t = 
+    let rec inner t' collect =
+        match t' with
+        | Unspec -> []
+        | Info (l,n,r) -> if collect then n:: (inner l true) @ (inner r false) else inner l true @ inner r false
+    List.tail (inner t true)
+let res6g = maleAnc nodeAnctree
+
+let femaleAnc t =
+    let rec inner t' collect =
+        match t' with
+        | Unspec -> []
+        | Info (l,n,r) -> if collect then n:: (inner l false) @ (inner r true) else inner l false @ inner r true
+    List.tail (inner t true)
+let res6h = femaleAnc nodeAnctree
+
+type BinTree<'a> =  | Leaf
+                    | Node of BinTree<'a> * 'a * BinTree<'a>  
+
+let bintree1 = Node(Node(Node(Leaf,-3,Leaf),0,Node(Leaf,2,Leaf)),5,Node(Leaf,7,Leaf))                
+
+
+let rec deleteSml t = 
+    match t with 
+    | Node (Leaf,x,Leaf) -> (x,Leaf)
+    | Node (Leaf,x,r) -> (x,r)
+    | Node (l,x,r) -> let (a,b) = deleteSml l
+                      if b = Leaf then (a,Node(Leaf,x,r)) else (a,Node(b,x,r))
+    |_ -> failwith "error"
+let test = deleteSml bintree1
+
+
+let rec deleteElement t e = 
+    match t with 
+    | Node (Leaf,x,Leaf) -> if x = e then Leaf else t
+    | Node (Leaf,x,r) -> if x = e then r elif e > x then deleteElement r e else t
+    | Node (l,x,Leaf) -> if x = e then l elif e < x then deleteElement l e else t
+    | Node (l,x,r) -> if x = e then (let (y,z) = deleteSml r 
+                                    Node (l,y,z))
+                               elif e > x then Node(l,x,deleteElement r e) else Node(deleteElement l e,x,r) 
+    | _ -> failwith "error" 
+let res6i = deleteElement bintree1 5
+                                 
+// 6.7 missing
+
+// 6.8
+type Instruction = 
+                    | ADD 
+                    | SUB
+                    | MULT
+                    | DIV
+                    | SIN
+                    | COS
+                    | LOG
+                    | EXP
+                    | PUSH of float
+
+type Stack =  float list  
+
+exception StackException of string
+
+/// Interpret the execution of a single instruction on the given Stack
+let intpInstr (s :Stack) (i :Instruction) :Stack = 
+    match i,s with
+    | ADD, s1::s2::s  -> (s1+s2)::s
+    | SUB, s1::s2::s  -> (s1-s2)::s
+    | MULT, s1::s2::s -> (s1*s2)::s
+    | DIV, s1::s2::s  -> (s1/s2)::s
+    | ADD, s1::s      -> s1::s
+    | SUB, s1::s      -> s1::s
+    | MULT, s1::s     -> s1::s
+    | DIV, s1::s      -> s1::s
+    | SIN, s1::s      -> (System.Math.Sin s1) ::s
+    | COS, s1::s      -> (System.Math.Cos s1) ::s
+    | LOG, s1::s      -> (System.Math.Log s1) ::s
+    | EXP, s1::s      -> (System.Math.Exp s1) ::s
+    | PUSH(f1), s     -> f1::s
+    | _,_ -> raise (StackException "Pass valid arguments you .... exception")
+
+
+let s1 = [1.2;3.0;5.6]:Stack
+
+let s2 = intpInstr s1 ADD
+let s3 = intpInstr s2 SUB
+let pushStack = intpInstr s3 (PUSH (3.0));;
+
+/// Interpret the execution of a programme (which is defined as a list of
+/// `Instruction`s as per the exercise text)
+let intpProg (is:Instruction List) = 
+    let rec intpProgInner list stack =
+        match list,stack with
+            | [],f::stack -> f
+            | i::list,stack -> intpProgInner list (intpInstr stack i)
+    intpProgInner is []
     
+let list = [PUSH(1.0);PUSH(2.0);PUSH(3.0);PUSH(127.0);MULT;ADD;SUB];;
+
+intpProg list;;
+
+// 6.9
+type Company<'a> = Node of 'a * (Company<'a> list) * int
+
+let rec extract (Node(n,l,i)) = 
+    (n,i)::List.collect extract l
+  
+let c1 = Node ("alpha",[],100)  
+let c2 = Node ("beta",[],12)
+let c3 = Node ("zeta",[],18)
+let c4 = Node ("sales", [], 22)
+let c5 = Node ("add",[],8)
+let c6 = Node ("HR",[c4;c5],1000)
+let c7 = Node ("Master", [c1;c2;c3;c6],400)
+let res6dep = extract c7
+
+//  --> Chapter 7 <--
+
+//7.1 -> exercises too sad to spent time on
+module Vector =
+    type Vector = V of {x:float;y:float} 
+    type Vector with 
+    static member (~-.) (V {x;y})             = V {-x;-y}
+    static member (+.) (V {x;y})  (V {x2;y2}) = V {x+x2;y+y2}
+    static member (-.) v1     v2              = v1 +. ~-. v2
+    static member ( *.) a         (V {x;y})   = V {a*x;a*y}
+    static member (&.) (V {x;y})  (V {x2;y2}) = x*x2 + y*y2
+    let norm (V {x;y})              = sqrt (x*x + y*y)
+    let make (x,y)                  = V {x;y}
+    let coord (V {x;y})             = (x,y)
+
+let c = Vector.make (2.0,3.0)
+
+//  --> Chapter 8  <--
+// 8.1
+let mutable x = 1;;
+let mutable y = (x,2);;
+let mutable z = y;;
+x <- 7;;
+print ();; 
+y <- (10,10)
+print ();;
+
+let print ( )=
+    printfn "x = %d" x 
+    let (a,b) = y
+    printfn "Y = (%d,%d)" a b
+    let (c,d) = z 
+    printfn "z = (%d,%d)" c d
+
+// 8.2
+// The declarations are accepted because the mutable list is polymorphic and is assigned to a type at run time 
+//when the first element is added
+
+// 8.3
+// dont like to draw
+
+// 8.5
+let gcdLoop (x,y) = 
+    let mutable m = x
+    let mutable n = y
+    let mutable h = 0
+    while m <>0 do 
+        h <- m; m <- n % m ; n <- h
+    n
+
+gcdLoop (36,116)     
+
+// 8.6 
+let fibLoop n =
+    let mutable count = n-2
+    let mutable pre = 1
+    let mutable prepre = 0
+    let mutable list = pre::prepre::[]
+    while count > 0 do
+        list <- (pre+prepre)::list
+        let holder = pre
+        pre <- prepre + pre 
+        prepre <- holder
+        count <- count - 1 
+    List.rev list
+    
+fibLoop 8;;
+
+let printFibList n = printfn "fibonacci result: %A" (fibLoop n)
+printFibList 9
+
+//8.7 -> 8-9 missing
+
+//  --> chapter 9  <--
+// 9.1
+
+// 9.2 
+// n functions as a accumulator and the fact that it has been implemented with a loop above
+
+// 9.3
+let rec iterativeSum (m,n) acc = if n <> 0 then iterativeSum (m,n-1) acc+m else acc
+let resiteSum = iterativeSum (2,4) 0
+
+let rec continuationSum (m,n) f =
+    if n = 0 then f 0
+    else continuationSum (m,n-1) (fun x -> f (m+x))
+let resCsum = continuationSum (2,4) id
+
+// 9.4
+let listLength l =
+    let rec inner l acc = 
+        match l with
+        | [] -> acc 
+        | x::xs -> inner xs acc+1
+    inner l 0    
+let resLlength = listLength [1;1;1;1]
+
+// 9.5
+let rec itFold f acc l =
+    match l with
+    | [] -> acc
+    | x::xs -> itFold f (acc + (f x)) xs
+
+let resFold = itFold (fun x -> x+1) 0 [1;1;1]
+
+// 9.6 
+let conFact n = 
+  let rec inner n' c = 
+    match n' with
+    | 0 -> c 1
+    | x -> c (inner (x-1) (fun x' -> x' * n')) in
+  inner n (fun x -> x)
+let resConFact = conFact 5
+
+// 9.7 -> hacky but works
+let rec fibA n =
+    let rec inner n' (a1,a2) =
+        match n' with
+        | -2 -> 0
+        | -1 -> 1
+        | 0 -> a1+a2
+        | x -> inner (x-1) (a2,a1+a2)
+    inner (n-2) (0,1)   
+let resFibA = fibA 1
+
+// cant figure this one out
+let fibC n =
+    let rec inner n' c =
+        match n' with
+        | 0 -> c 1
+        | x -> c inner (x-1) (fun x -> x) c inner (x-2) (fun x' -> x') in
+    inner n (fun x y -> x + y)   
+
+let fibC2 n =
+    let rec inner n' acc c =
+        if n' = 0 then acc 
+        else inner (n'-1) acc (fun x -> acc + x + inner (n'-1) acc c)
+    inner n id
+
+//  --> chapter 10  <--
+
+// 10.1 --> in seperate file
+
+// --> Chapter 11 <--
+
+// 11.1
+let oddSeq = 
+    Seq.filter (fun x -> x % 2 <> 0) (Seq.initInfinite (fun x -> x))
+let odSeq2 = seq [1 .. 2 .. 99]
+let print n seq = printfn "nth = %d" (Seq.item n seq)
+let pOddInfi = print 5 oddSeq
+
+// 11.2
+let factSeq n = 
+    let se = seq [1;1]
+    let rec inner indx s = 
+       let val1 = Seq.item (indx-1) s 
+       let val2 = Seq.item (indx) s
+       let newval = (val1+val2) * val2
+       if val2 > n then s 
+       else
+            inner (indx+1) (Seq.append s (Seq.singleton newval))
+    inner 1 se        
+let resFactSeq = factSeq 6
+
+// 11.4
+let sublistSeq i n = 
+    let init = Seq.init ((i+n)*2) (fun x -> x*2)
+    seq {for i in [0..i+n-1] do yield (Seq.item i init) }
+
+let resSubSeq = printfn "%A" (sublistSeq 5 4)
+resSubSeq;;
+
+let sublistSeq2 i n = 
+    let init = Seq.init ((i+n)*2) (fun x -> x*2)
+    seq {for i in [0..i+n-1] do yield! (Seq.map (fun x -> x + i) init) }
+let resSub2 = List.ofSeq (sublistSeq2 3 4) 
+
+// 11.5 
+let next a b = (a/b+b)/2.0
+next 2.0 1.0
+let rec iter f x = function
+                    | 0 -> x 
+                    | n -> iter f (f x) (n-1)             
+
+let iterate f x = Seq.initInfinite (fun i -> iter f x i);;
+iterate (next 2.0) 1.0
+
+let w = List.ofSeq (iterate (fun x -> x *2) [1;2;3] 3) 
+let convert s = for i in [0..20] do Seq.item i (iterate (fun x -> x*2) )

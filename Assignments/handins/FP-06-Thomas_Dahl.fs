@@ -167,7 +167,8 @@ let myStack = [1.2;3.0;5.6]:Stack
 
 let myNewStack = intpInstr myStack ADD
 let myNewNewStack = intpInstr myNewStack SUB
-let myFail = intpInstr myNewNewStack ADD // explodes!
+let myFail = intpInstr myNewNewStack ADD 
+let pushStack = intpInstr myNewNewStack (PUSH (3.0));;
 
 (* Exercise 6.2.2 (HR 6.8.2) *)
 
@@ -225,11 +226,11 @@ let test = intpProg transTest2;;
 [<Sealed>]
 
 type Complex = 
-    static member ( + )  : Complex*Complex -> Complex
-    static member ( - )  : Complex*Complex -> Complex
-    static member ( * )  : float*Complex -> Complex
-    static member ( * )  : Complex*Complex -> Complex
-    static member ( / )  : Complex*Complex -> Complex
+            static member ( + )  : Complex*Complex -> Complex
+            static member ( - )  : Complex*Complex -> Complex
+            static member ( * )  : float*Complex -> Complex
+            static member ( * )  : Complex*Complex -> Complex
+            static member ( / )  : Complex*Complex -> Complex
 
 //CN.fs
 module CN

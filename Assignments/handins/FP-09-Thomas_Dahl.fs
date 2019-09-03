@@ -13,7 +13,7 @@ type expr =
     | Prim3 of string * string * expr * expr * expr
 
 let random = new System.Random()
-
+let r = random.Next()
 // ------------------------------------------------------------
 
 // Plain evaluator, return type int
@@ -119,6 +119,10 @@ eval3 (Prim1("ABS", Prim("+", CstI(4), Prim("*", CstI(-3), CstI(5)))))
 eval1 (Prim3("+", "*", Prim1("ABS", Prim("+", CstI(2), CstI(-6))), CstI(5), CstI(3)))
 eval2 (Prim3("+", "*", Prim1("ABS", Prim("+", CstI(2), CstI(-6))), CstI(5), CstI(3)))
 eval3 (Prim3("+", "*", Prim1("ABS", Prim("+", CstI(2), CstI(-6))), CstI(5), CstI(3)))
+
+let expr10 = Prim1("ABS", Prim("+", CstI(7), Prim("*", CstI(-9), CstI(10))))
+let expr11 = Prim1("ABS", Prim("+", CstI(7), Prim("/", CstI(9), CstI(0))))
+let expr12 = Prim("+", CstI(7), Prim("choose", Prim1("ABS", CstI(-9)), CstI(10)))
 
 // ------------------------------------------------------------
 
